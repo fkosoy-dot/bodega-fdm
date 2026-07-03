@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CGC × BDFM — Simulador de Suministro Eléctrico</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg:#F5F4F0;--surface:#FFF;--surface-2:#F0EEE9;--border:#E2DFD8;--border-strong:#C8C4BB;
+  --text-primary:#1A1816;--text-secondary:#5C5852;--text-muted:#9B9690;
+  --accent:#1B4F72;--accent-light:#EAF0F6;--accent-2:#0E6655;--accent-2-light:#E8F5F1;
+  --amber:#935116;--amber-light:#FDF3E3;--red:#922B21;--red-light:#FAEAEA;
+  --blue-dark:#154360;--green-dark:#0B5345;
+  --mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --r:10px;--r-sm:6px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.6;min-height:100vh}
+header{background:var(--accent);color:#fff;padding:0 40px;position:sticky;top:0;z-index:100;border-bottom:2px solid rgba(255,255,255,.1)}
+.header-inner{max-width:1300px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px}
+.header-logo{display:flex;align-items:center;gap:16px}
+.logo-mark{width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600}
+.header-title{font-size:15px;font-weight:500}.header-sub{font-size:12px;opacity:.6;margin-top:1px}
+.header-badge{font-size:11px;font-weight:500;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);padding:4px 12px;border-radius:20px;letter-spacing:.05em;font-family:var(--mono)}
+nav{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:60px;z-index:99;box-shadow:var(--shadow-sm)}
+.nav-inner{max-width:1300px;margin:0 auto;display:flex;padding:0 40px}
+.nav-item{padding:14px 20px;font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.nav-item:hover{color:var(--accent)}.nav-item.active{color:var(--accent);border-bottom-color:var(--accent)}
+.page{max-width:1300px;margin:0 auto;padding:32px 40px}
+.section{display:none}.section.active{display:block}
+.filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.filter-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-right:4px}
+.filter-btn{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:500;color:var(--text-secondary);transition:all .15s;user-select:none}
+.filter-btn:hover{border-color:var(--accent);color:var(--accent)}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.filter-btn .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.filter-btn.active .dot{background:rgba(255,255,255,.6)}
+.dot-all{background:var(--border-strong)}.dot-t3{background:#1B4F72}.dot-t4{background:#0E6655}
+.filter-btn.active.btn-t3{background:#1B4F72;border-color:#1B4F72}
+.filter-btn.active.btn-t4{background:#0E6655;border-color:#0E6655}
+.filter-note{font-size:11px;color:var(--text-muted);margin-left:auto;font-style:italic}
+.slicers-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;margin-bottom:20px;box-shadow:var(--shadow-sm)}
+.slicers-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:14px}
+.slicers-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.slicer-item{display:flex;flex-direction:column;gap:6px}
+.slicer-label{font-size:12px;color:var(--text-secondary);font-weight:500;display:flex;justify-content:space-between;align-items:center}
+.slicer-val{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--accent);background:var(--accent-light);padding:2px 8px;border-radius:4px}
+.slicer-val.green{color:var(--green-dark);background:var(--accent-2-light)}
+.slicer-val.amber{color:var(--amber);background:var(--amber-light)}
+.slicer-val.red{color:var(--red);background:var(--red-light)}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--accent);border-radius:50%;cursor:pointer;box-shadow:0 1px 4px rgba(27,79,114,.3);transition:transform .1s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:24px}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+.metric-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.metric-card.blue::before{background:var(--accent)}.metric-card.green::before{background:var(--accent-2)}
+.metric-card.amber::before{background:var(--amber)}.metric-card.red::before{background:var(--red)}
+.metric-card.neutral::before{background:var(--border-strong)}
+.metric-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:8px}
+.metric-value{font-size:21px;font-weight:500;color:var(--text-primary);font-family:var(--mono);letter-spacing:-.5px}
+.metric-sub{font-size:11px;color:var(--text-muted);margin-top:4px}
+.section-header{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+.section-header h2{font-size:17px;font-weight:600}.section-header .desc{font-size:13px;color:var(--text-muted)}
+.subsection-header{font-size:14px;font-weight:600;color:var(--text-secondary);margin:24px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:20px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:700px}
+thead tr{background:var(--surface-2);border-bottom:1px solid var(--border)}
+th{padding:10px 14px;text-align:right;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);white-space:nowrap}
+th:first-child{text-align:left}
+td{padding:9px 14px;text-align:right;color:var(--text-primary);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px;white-space:nowrap}
+td:first-child{text-align:left;font-family:var(--sans);font-size:13px}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--surface-2)}
+.total-row td{background:var(--accent-light)!important;font-weight:600;color:var(--blue-dark);border-top:1.5px solid var(--accent)}
+.saving-row td{background:var(--accent-2-light)!important;font-weight:600;color:var(--green-dark);border-top:1.5px solid var(--accent-2)}
+.cgc-row td{background:#EAF0F6!important;font-weight:600;color:var(--blue-dark)}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+@media(max-width:900px){.charts-grid{grid-template-columns:1fr}}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 20px 16px;box-shadow:var(--shadow-sm)}
+.chart-card.full{grid-column:1/-1}
+.chart-title{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:4px}
+.chart-subtitle{font-size:12px;color:var(--text-muted);margin-bottom:16px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+@media(max-width:800px){.info-grid{grid-template-columns:1fr}}
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
+.info-card-header{background:var(--surface-2);padding:12px 16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);border-bottom:1px solid var(--border)}
+.info-rows{padding:4px 0}
+.info-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 16px;border-bottom:1px solid var(--border);gap:16px}
+.info-row:last-child{border-bottom:none}
+.info-key{font-size:12px;color:var(--text-muted);flex-shrink:0}
+.info-val{font-size:13px;font-weight:500;color:var(--text-primary);text-align:right}
+.info-val.green{color:var(--accent-2)}.info-val.red{color:var(--red)}.info-val.amber{color:var(--amber)}
+.ahorro-banner{border:1.5px solid var(--accent-2);border-radius:var(--r);padding:16px 22px;margin-bottom:20px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.ahorro-kpi{display:flex;flex-direction:column;gap:2px}
+.ahorro-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--green-dark)}
+.ahorro-value{font-size:26px;font-weight:500;font-family:var(--mono);letter-spacing:-1px}
+.ahorro-sub{font-size:11px;color:var(--text-muted)}
+.ahorro-divider{width:1px;height:44px;background:var(--accent-2);opacity:.25}
+.note{background:var(--surface-2);border-left:3px solid var(--border-strong);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:12px 16px;font-size:12px;color:var(--text-secondary);line-height:1.7;margin-top:12px}
+.note strong{color:var(--text-primary)}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;font-family:var(--mono);margin-left:6px;vertical-align:middle}
+.badge-real{background:#E8F5F1;color:#0B5345}.badge-est{background:#FDF3E3;color:#935116}
+footer{border-top:1px solid var(--border);background:var(--surface);padding:20px 40px;margin-top:60px}
+.footer-inner{max-width:1300px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-muted)}
+.via-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:20px}
+.via-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow-sm)}
+.via-badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;margin-bottom:10px}
+.via-badge.red{background:var(--red-light);color:var(--red)}.via-badge.amber{background:var(--amber-light);color:var(--amber)}.via-badge.green{background:var(--accent-2-light);color:var(--green-dark)}
+.via-title{font-size:14px;font-weight:600;margin-bottom:6px}
+.via-body{font-size:13px;color:var(--text-secondary);line-height:1.6}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="header-logo">
+      <div class="logo-mark">CG</div>
+      <div>
+        <div class="header-title">CGC × BDFM S.A. — Simulador de Suministro Eléctrico</div>
+        <div class="header-sub">Golfo San Jorge → El Chañar, Neuquén · Antes de impuestos</div>
+      </div>
+    </div>
+    <div class="header-badge">Base: Facturas EPEN mayo 2026</div>
+  </div>
+</header>
+<nav>
+  <div class="nav-inner">
+    <div class="nav-item active" onclick="showSection('resumen')">Situación actual</div>
+    <div class="nav-item" onclick="showSection('flujo')">Flujo mes a mes</div>
+    <div class="nav-item" onclick="showSection('cgc')">Flujo CGC</div>
+    <div class="nav-item" onclick="showSection('visual')">Visualización</div>
+    <div class="nav-item" onclick="showSection('viabilidad')">Viabilidad regulatoria</div>
+  </div>
+</nav>
+
+<div class="page">
+
+<!-- FILTER -->
+<div class="filter-bar">
+  <span class="filter-label">Suministro</span>
+  <button class="filter-btn active btn-all" onclick="setFilter('all')"><span class="dot dot-all"></span>Consolidado</button>
+  <button class="filter-btn btn-t3" onclick="setFilter('t3')"><span class="dot dot-t3"></span>Cto. 74177 — T3 Riego</button>
+  <button class="filter-btn btn-t4" onclick="setFilter('t4')"><span class="dot dot-t4"></span>Cto. 78919 — T4A Bodega</button>
+  <span class="filter-note" id="filter-note">Consolidado de ambos suministros</span>
+</div>
+
+<!-- SLICERS -->
+<div class="slicers-bar">
+  <div class="slicers-title">Parámetros del modelo — arrastrá para ver impacto en tiempo real</div>
+  <div class="slicers-grid">
+    <div class="slicer-item">
+      <div class="slicer-label">Tipo de cambio ARS/USD<span class="slicer-val" id="val-tc">$ 1.450</span></div>
+      <input type="range" id="sl-tc" min="1200" max="2500" step="10" value="1450" oninput="update()">
+    </div>
+    <div class="slicer-item">
+      <div class="slicer-label">Precio venta CGC → BDFM<span class="slicer-val green" id="val-precio-cgc">55 USD/MWh</span></div>
+      <input type="range" id="sl-precio-cgc" min="30" max="130" step="1" value="55" oninput="update()">
+    </div>
+    <div class="slicer-item">
+      <div class="slicer-label">Costo generación CGC (interno)<span class="slicer-val amber" id="val-costo-cgc">35 USD/MWh</span></div>
+      <input type="range" id="sl-costo-cgc" min="20" max="60" step="1" value="35" oninput="update()">
+    </div>
+    <div class="slicer-item">
+      <div class="slicer-label">Transporte + distribución (BDFM)<span class="slicer-val red" id="val-td">15 USD/MWh</span></div>
+      <input type="range" id="sl-td" min="0" max="50" step="1" value="15" oninput="update()">
+    </div>
+    <div class="slicer-item">
+      <div class="slicer-label">Inflación tarifaria EPEN (anual)<span class="slicer-val" id="val-inf">0%</span></div>
+      <input type="range" id="sl-inf" min="0" max="150" step="5" value="0" oninput="update()">
+    </div>
+  </div>
+</div>
+
+<!-- ======= SITUACIÓN ACTUAL ======= -->
+<div id="s-resumen" class="section active">
+  <div class="section-header"><h2>Situación actual — BDFM S.A.</h2><span class="desc">Datos reales · Facturas EPEN mayo 2026 · Antes de impuestos</span></div>
+  <div class="metrics-grid" id="res-metrics"></div>
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-card-header">T3 Riego — Cto. 00074177 <span class="badge badge-real">DATO REAL</span></div>
+      <div class="info-rows">
+        <div class="info-row"><span class="info-key">Tarifa</span><span class="info-val">T3-Grandes Demandas · Media Tensión</span></div>
+        <div class="info-row"><span class="info-key">Potencia contratada</span><span class="info-val">216 kW</span></div>
+        <div class="info-row"><span class="info-key">Consumo mayo 2026</span><span class="info-val">7.488 kWh = 7,49 MWh</span></div>
+        <div class="info-row"><span class="info-key">Neto gravado (sin impuestos)</span><span class="info-val red">$9.493.278 ARS</span></div>
+        <div class="info-row"><span class="info-key">Total con impuestos</span><span class="info-val red">$12.610.174 ARS</span></div>
+        <div class="info-row"><span class="info-key">USD/MWh sin impuestos (mayo)</span><span class="info-val red" id="unit-t3-sin">—</span></div>
+        <div class="info-row"><span class="info-key">Nota</span><span class="info-val amber">Mayo = mínimo estacional del riego</span></div>
+      </div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-header">T4A Bodega — Cto. 00078919 <span class="badge badge-real">DATO REAL</span></div>
+      <div class="info-rows">
+        <div class="info-row"><span class="info-key">Tarifa</span><span class="info-val">T4A-Grandes Dem. Especiales ≥300kW · Media Tensión</span></div>
+        <div class="info-row"><span class="info-key">Potencia contratada</span><span class="info-val">374 kW</span></div>
+        <div class="info-row"><span class="info-key">Consumo mayo 2026</span><span class="info-val">49.752 kWh = 49,75 MWh</span></div>
+        <div class="info-row"><span class="info-key">Neto gravado (sin impuestos)</span><span class="info-val red">$16.953.113 ARS</span></div>
+        <div class="info-row"><span class="info-key">Total con impuestos</span><span class="info-val red">$22.709.132 ARS</span></div>
+        <div class="info-row"><span class="info-key">USD/MWh sin impuestos (mayo)</span><span class="info-val red" id="unit-t4-sin">—</span></div>
+        <div class="info-row"><span class="info-key">Nota</span><span class="info-val amber">Mayo = inicio invierno · consumo bajo-medio</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-card-header">Estructura tarifaria EPEN — componentes (sin impuestos)</div>
+      <div class="info-rows">
+        <div class="info-row"><span class="info-key">Cargo demanda contratada (fijo)</span><span class="info-val">ARS/kW-mes · varía por tarifa</span></div>
+        <div class="info-row"><span class="info-key">T3: cargo demanda (216 kW)</span><span class="info-val">$26.431/kW → $5.709.096</span></div>
+        <div class="info-row"><span class="info-key">T4A: cargo demanda (374 kW)</span><span class="info-val">$27.322/kW → $10.218.424</span></div>
+        <div class="info-row"><span class="info-key">Cargo variable energía</span><span class="info-val">T3: $291/kWh · T4A: $226/kWh</span></div>
+        <div class="info-row"><span class="info-key">Subsidio Decreto 304/26</span><span class="info-val green">T3: -30% · T4A: -24% sobre energía</span></div>
+        <div class="info-row"><span class="info-key">Cargos MEM (FNEE, transporte)</span><span class="info-val">Incluidos en neto gravado</span></div>
+      </div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-header">Por qué el T3 tiene un USD/MWh tan alto en mayo</div>
+      <div class="info-rows">
+        <div class="info-row"><span class="info-key">Cargo fijo de demanda T3</span><span class="info-val">$5.709.096 (independiente del consumo)</span></div>
+        <div class="info-row"><span class="info-key">Consumo energía mayo (mínimo)</span><span class="info-val">7,49 MWh — inicio de invierno</span></div>
+        <div class="info-row"><span class="info-key">Resultado</span><span class="info-val red">Cargo fijo se divide entre pocos MWh → USD/MWh altísimo</span></div>
+        <div class="info-row"><span class="info-key">En verano (riego pleno)</span><span class="info-val green">~50 MWh → USD/MWh cae ~7x</span></div>
+        <div class="info-row"><span class="info-key">Riesgo clave</span><span class="info-val amber">Subsidio Dec.304/26 podría eliminarse</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="note"><strong>Metodología:</strong> todos los cálculos comparativos usan el <strong>neto gravado (antes de impuestos)</strong> como base del costo EPEN. Los impuestos (IVA 27%, IIBB, tasa EPEN, percepción) no se incluyen en la comparación con CGC porque en cualquier esquema alternativo BDFM seguiría pagando impuestos sobre el servicio. <span class="badge badge-est">ESTIMADO</span> = proyección basada en datos reales de mayo 2026 + perfil estacional típico de bodegas neuquinas.</div>
+</div>
+
+<!-- ======= FLUJO MES A MES ======= -->
+<div id="s-flujo" class="section">
+  <div class="section-header"><h2>Flujo mes a mes — BDFM (consumidor)</h2><span class="desc">Proyección anual con estacionalidad · Antes de impuestos · USD</span></div>
+  <div class="metrics-grid" id="flujo-metrics"></div>
+
+  <div class="subsection-header">Escenario A — Continúa con EPEN <span class="badge badge-est">ESTIMADO</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Mes</th>
+        <th>Estación</th>
+        <th>MWh consumidos</th>
+        <th>Cargo demanda ARS</th>
+        <th>Cargo energía ARS</th>
+        <th>Neto EPEN ARS</th>
+        <th>Neto EPEN USD</th>
+        <th>USD/MWh EPEN</th>
+        <th>Fuente</th>
+      </tr></thead>
+      <tbody id="epen-tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="subsection-header">Escenario B — Suministro CGC <span class="badge badge-est">ESTIMADO</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Mes</th>
+        <th>MWh consumidos</th>
+        <th>Precio CGC USD/MWh</th>
+        <th>Costo energía CGC USD</th>
+        <th>Transporte+Dist. USD/MWh</th>
+        <th>Costo T+D USD</th>
+        <th>Total BDFM paga USD</th>
+        <th>USD/MWh efectivo BDFM</th>
+        <th>Ahorro vs. EPEN USD</th>
+        <th>Ahorro %</th>
+      </tr></thead>
+      <tbody id="cgc-bdfm-tbody"></tbody>
+    </table>
+  </div>
+  <div class="note"><strong>Estacionalidad:</strong> T4A Bodega con pico en vendimia (feb–abr) calibrado con ref. consultora 174.528 kWh/mes (marzo 2026) y real mayo 49.752 kWh. T3 Riego con pico nov–mar calibrado con ref. consultora 50.544 kWh/mes (marzo) y real mayo 7.488 kWh. El cargo de demanda EPEN es <strong>fijo</strong> mensualmente (no varía con el consumo) — es el componente que hace tan caro el costo por MWh en meses de bajo consumo.</div>
+</div>
+
+<!-- ======= FLUJO CGC ======= -->
+<div id="s-cgc" class="section">
+  <div class="section-header"><h2>Flujo mes a mes — CGC (generador)</h2><span class="desc">Ingresos · Costos · Margen · Antes de impuestos · USD</span></div>
+  <div class="metrics-grid" id="cgc-metrics"></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Mes</th>
+        <th>MWh vendidos</th>
+        <th>Precio venta USD/MWh</th>
+        <th>Ingreso bruto USD</th>
+        <th>Costo generación USD/MWh</th>
+        <th>Costo generación USD</th>
+        <th>Margen USD</th>
+        <th>Margen USD/MWh</th>
+        <th>Margen %</th>
+        <th>Acumulado margen USD</th>
+      </tr></thead>
+      <tbody id="cgc-tbody"></tbody>
+    </table>
+  </div>
+  <div class="note"><strong>Perspectiva CGC:</strong> el ingreso es el precio de venta completo (CGC percibe el 100% del precio acordado). El transporte y distribución lo paga BDFM por separado. El costo de generación incluye gas, O&M y costos fijos de la usina — el slicer permite sensibilizarlo entre 20 y 60 USD/MWh.</div>
+</div>
+
+<!-- ======= VISUAL ======= -->
+<div id="s-visual" class="section">
+  <div class="section-header"><h2>Visualización</h2><span class="desc">Análisis gráfico · Estacionalidad · EPEN vs. CGC · Flujo CGC</span></div>
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Consumo mensual por suministro (MWh)</div>
+      <div class="chart-subtitle">Estacionalidad anual estimada — T3 Riego vs. T4A Bodega</div>
+      <div style="height:250px"><canvas id="c-estac"></canvas></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#1B4F72"></div>T3 Riego</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#0E6655"></div>T4A Bodega</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">USD/MWh efectivo mensual — EPEN vs. CGC all-in</div>
+      <div class="chart-subtitle">EPEN sin impuestos · CGC = precio + T&D</div>
+      <div style="height:250px"><canvas id="c-unit"></canvas></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#922B21"></div>EPEN USD/MWh</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#0E6655;border-radius:50%"></div>CGC all-in (fijo)</div>
+      </div>
+    </div>
+    <div class="chart-card full">
+      <div class="chart-title">Acumulado 12 meses — EPEN vs. CGC total BDFM (USD)</div>
+      <div class="chart-subtitle">Costo acumulado anual · antes de impuestos</div>
+      <div style="height:230px"><canvas id="c-acum"></canvas></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#922B21;border-radius:50%"></div>Acumulado EPEN</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#0E6655;border-radius:50%"></div>Acumulado CGC total (precio + T&D)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1B4F72;border-radius:50%"></div>Acumulado ingreso CGC (solo precio)</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Ahorro mensual BDFM (USD)</div>
+      <div class="chart-subtitle">EPEN − total CGC · verde = ahorro · rojo = pérdida</div>
+      <div style="height:230px"><canvas id="c-ahorro"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Margen CGC mensual (USD)</div>
+      <div class="chart-subtitle">Ingreso − costo de generación</div>
+      <div style="height:230px"><canvas id="c-margen"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======= VIABILIDAD ======= -->
+<div id="s-viabilidad" class="section">
+  <div class="section-header"><h2>Viabilidad regulatoria</h2><span class="desc">Marco legal · Alternativas · Próximos pasos</span></div>
+  <div class="via-grid">
+    <div class="via-card"><div class="via-badge red">Obstáculo crítico</div><div class="via-title">Distancia física</div><div class="via-body">Los activos de CGC están en la cuenca del Golfo San Jorge. BDFM está en El Chañar, Neuquén. Sin infraestructura directa — la energía requiere red de transporte de terceros (TRANSPA/CAMMESA) con peaje.</div></div>
+    <div class="via-card"><div class="via-badge red">Obstáculo crítico</div><div class="via-title">Ley 24.065 — MEM</div><div class="via-body">La venta directa entre privados fuera del MEM no está permitida. BDFM (~313 kW en pico) está en el límite del umbral GUME (300 kW), pero no siempre lo supera. Muy lejos del GUMA (1 MW).</div></div>
+    <div class="via-card"><div class="via-badge red">Obstáculo crítico</div><div class="via-title">Habilitación CGC</div><div class="via-body">CGC opera como autogenerador. Vender a terceros requiere habilitarse como agente generador del MEM ante ENRE/CAMMESA. Proceso largo (12–24 meses) y con requerimientos de garantía.</div></div>
+    <div class="via-card"><div class="via-badge amber">Condicionado</div><div class="via-title">PPA vía MEM</div><div class="via-body">Si BDFM consolida sus dos contratos y acredita demanda real ≥300 kW sostenida, califica como GUME. CGC se habilita como generador, inyecta desde GSJ, BDFM retira desde nodo Neuquén pagando peaje de transporte (~8–12 USD/MWh) y distribución EPEN (~15–25 USD/MWh).</div></div>
+    <div class="via-card"><div class="via-badge green">Alternativa viable</div><div class="via-title">Generación distribuida in situ</div><div class="via-body">CGC instala motogeneradores a gas directamente en el predio de BDFM en El Chañar (Ley 27.424). Elimina el problema de transporte. Escala ~300–590 kW es viable. Requiere activos CGC en Neuquén y acuerdo de largo plazo con BDFM.</div></div>
+    <div class="via-card"><div class="via-badge green">Paralelo viable</div><div class="via-title">Inyección al MEM desde GSJ</div><div class="via-body">CGC puede vender excedentes a CAMMESA desde Usina Meseta Espinosa al precio spot (~44–48 USD/MWh). No resuelve el problema de BDFM directamente pero genera ingresos mientras avanza la habilitación como agente MEM.</div></div>
+  </div>
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-card-header">BDFM vs. umbrales MEM</div>
+      <div class="info-rows">
+        <div class="info-row"><span class="info-key">Potencia contratada total</span><span class="info-val">590 kW (216 T3 + 374 T4A)</span></div>
+        <div class="info-row"><span class="info-key">Potencia media en pico (ref. consultora)</span><span class="info-val">~313 kW</span></div>
+        <div class="info-row"><span class="info-key">Umbral GUME</span><span class="info-val amber">300 kW — BDFM en el límite</span></div>
+        <div class="info-row"><span class="info-key">Umbral GUMA</span><span class="info-val red">1.000 kW — muy por debajo</span></div>
+        <div class="info-row"><span class="info-key">Calificación actual</span><span class="info-val amber">Potencialmente GUME en meses de pico</span></div>
+      </div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-header">Próximos pasos recomendados</div>
+      <div class="info-rows">
+        <div class="info-row"><span class="info-key">Corto plazo</span><span class="info-val">Análisis legal regulatorio detallado</span></div>
+        <div class="info-row"><span class="info-key">Corto plazo</span><span class="info-val">Medición de demanda real consolidada BDFM (12 meses)</span></div>
+        <div class="info-row"><span class="info-key">Mediano plazo</span><span class="info-val">Factibilidad técnica generación distribuida in situ</span></div>
+        <div class="info-row"><span class="info-key">Mediano plazo</span><span class="info-val">Inicio tramitación habilitación CGC como agente MEM</span></div>
+        <div class="info-row"><span class="info-key">Paralelo inmediato</span><span class="info-val">Inyección excedentes GSJ al MEM vía CAMMESA</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /page -->
+<footer>
+  <div class="footer-inner">
+    <span>CGC × BDFM S.A. — Simulador interno · Base: facturas EPEN mayo 2026 + modelo consultora mar 2026</span>
+    <span>Uso interno CGC · Antes de impuestos · Estimaciones sujetas a revisión con datos históricos adicionales</span>
+  </div>
+</footer>
+
+<script>
+const MESES   = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MESES_S = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+// ============================================================
+// DATOS BASE — calibrados con facturas reales
+// ============================================================
+
+// Mayo 2026 — DATO REAL de factura
+const MAYO_T3_MWH  = 7.488;
+const MAYO_T4_MWH  = 49.752;
+const MAYO_T3_NETO = 9493278;   // neto gravado sin impuestos ARS
+const MAYO_T4_NETO = 16953113;  // neto gravado sin impuestos ARS
+
+// Demanda contratada (cargo fijo mensual ARS) — extraído de facturas
+const DEMANDA_T3_ARS = 5709096;   // 216 kW × $26.431/kW
+const DEMANDA_T4_ARS = 10218424;  // 374 kW × $27.322/kW
+
+// Cargo variable energía neta (neto − demanda − ajustes) mayo
+// T3: 9.493.278 − 5.709.096 = 3.784.182 sobre 7.488 MWh → $505/kWh neto variable
+// T4A: 16.953.113 − 10.218.424 = 6.734.689 sobre 49.752 MWh → $135/kWh neto variable
+const VAR_T3_ARS_KWH = (MAYO_T3_NETO - DEMANDA_T3_ARS) / (MAYO_T3_MWH * 1000);
+const VAR_T4_ARS_KWH = (MAYO_T4_NETO - DEMANDA_T4_ARS) / (MAYO_T4_MWH * 1000);
+
+// Índices de consumo estacional (1.0 = mayo, calibrado con ref. consultora)
+// T3 Riego: ref. marzo consultora = 50.544 kWh → índice 50.544/7.488 = 6.75
+const IDX_T3 = [3.8, 4.2, 6.75, 3.5, 1.0, 0.3, 0.15, 0.2, 0.8, 2.5, 3.2, 3.8];
+// T4A Bodega: ref. marzo consultora = 174.528 kWh → índice 174.528/49.752 = 3.51
+const IDX_T4 = [2.8, 3.2, 3.51, 2.9, 1.0, 0.85, 0.70, 0.72, 0.88, 1.1, 1.8, 2.4];
+
+// Fuente por mes
+const FUENTE = ['Est','Est','Est*','Est','Real','Est','Est','Est','Est','Est','Est','Est'];
+// *Marzo = ref. consultora
+
+let charts = {};
+let currentFilter = 'all';
+
+// ============================================================
+// HELPERS
+// ============================================================
+function getParams() {
+  return {
+    tc:        parseFloat(document.getElementById('sl-tc').value),
+    precioCGC: parseFloat(document.getElementById('sl-precio-cgc').value),
+    costoCGC:  parseFloat(document.getElementById('sl-costo-cgc').value),
+    td:        parseFloat(document.getElementById('sl-td').value),
+    inf:       parseFloat(document.getElementById('sl-inf').value) / 100,
+  };
+}
+
+function getMWh(m) {
+  const t3 = MAYO_T3_MWH * IDX_T3[m];
+  const t4 = MAYO_T4_MWH * IDX_T4[m];
+  if (currentFilter === 't3') return t3;
+  if (currentFilter === 't4') return t4;
+  return t3 + t4;
+}
+
+function getNetoARS(m, p) {
+  // Cargo fijo demanda (no varía con consumo) + cargo variable × MWh del mes
+  const infFactor = 1 + p.inf * m / 12;
+  const t3 = (DEMANDA_T3_ARS + VAR_T3_ARS_KWH * MAYO_T3_MWH * IDX_T3[m] * 1000) * infFactor;
+  const t4 = (DEMANDA_T4_ARS + VAR_T4_ARS_KWH * MAYO_T4_MWH * IDX_T4[m] * 1000) * infFactor;
+  if (currentFilter === 't3') return { t3, t4:0, total:t3, dem_t3: DEMANDA_T3_ARS*infFactor, dem_t4:0, eng_t3: t3-DEMANDA_T3_ARS*infFactor, eng_t4:0 };
+  if (currentFilter === 't4') return { t3:0, t4, total:t4, dem_t3:0, dem_t4: DEMANDA_T4_ARS*infFactor, eng_t3:0, eng_t4: t4-DEMANDA_T4_ARS*infFactor };
+  return { t3, t4, total:t3+t4, dem_t3: DEMANDA_T3_ARS*infFactor, dem_t4: DEMANDA_T4_ARS*infFactor, eng_t3: t3-DEMANDA_T3_ARS*infFactor, eng_t4: t4-DEMANDA_T4_ARS*infFactor };
+}
+
+function calcRows(p) {
+  return Array.from({length:12}, (_,m) => {
+    const mwh      = getMWh(m);
+    const neto     = getNetoARS(m, p);
+    const netoUSD  = neto.total / p.tc;
+    const unitEPEN = netoUSD / mwh;
+    const cgcEng   = p.precioCGC * mwh;
+    const cgcTD    = p.td * mwh;
+    const cgcTotal = cgcEng + cgcTD;
+    const cgcUnit  = cgcTotal / mwh;
+    const ahorro   = netoUSD - cgcTotal;
+    const margen   = (p.precioCGC - p.costoCGC) * mwh;
+    return { m, mwh, netoARS: neto.total, demARS: neto.dem_t3+neto.dem_t4, engARS: neto.eng_t3+neto.eng_t4, netoUSD, unitEPEN, cgcEng, cgcTD, cgcTotal, cgcUnit, ahorro, margen, costoCGCTotal: p.costoCGC*mwh };
+  });
+}
+
+function fmt(n,d=0){return n.toLocaleString('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d})}
+function fARS(n){return '$\u00a0'+fmt(Math.round(n))}
+function fUSD(n){return 'USD\u00a0'+fmt(Math.round(n))}
+function fUSDd(n,d=1){return 'USD\u00a0'+fmt(n,d)}
+
+// ============================================================
+// UPDATE
+// ============================================================
+function update() {
+  const p = getParams();
+  document.getElementById('val-tc').textContent         = '$ '+fmt(p.tc);
+  document.getElementById('val-precio-cgc').textContent = p.precioCGC+' USD/MWh';
+  document.getElementById('val-costo-cgc').textContent  = p.costoCGC+' USD/MWh';
+  document.getElementById('val-td').textContent         = p.td+' USD/MWh';
+  document.getElementById('val-inf').textContent        = (p.inf*100).toFixed(0)+'%';
+
+  document.getElementById('unit-t3-sin').textContent = fUSDd(MAYO_T3_NETO/p.tc/MAYO_T3_MWH,0)+'/MWh';
+  document.getElementById('unit-t4-sin').textContent = fUSDd(MAYO_T4_NETO/p.tc/MAYO_T4_MWH,0)+'/MWh';
+
+  const rows = calcRows(p);
+  updateResumen(p, rows);
+  updateFlujo(p, rows);
+  updateCGC(p, rows);
+  updateCharts(p, rows);
+}
+
+function updateResumen(p, rows) {
+  const totMWh  = rows.reduce((a,r)=>a+r.mwh,0);
+  const totEPEN = rows.reduce((a,r)=>a+r.netoUSD,0);
+  const totCGC  = rows.reduce((a,r)=>a+r.cgcTotal,0);
+  const totAh   = totEPEN - totCGC;
+  const totMar  = rows.reduce((a,r)=>a+r.margen,0);
+  document.getElementById('res-metrics').innerHTML = `
+    <div class="metric-card red"><div class="metric-label">Costo anual EPEN (sin imp.)</div><div class="metric-value">${fUSD(totEPEN)}</div><div class="metric-sub">Proyección 12 meses con estacionalidad</div></div>
+    <div class="metric-card amber"><div class="metric-label">Consumo anual estimado</div><div class="metric-value">${fmt(totMWh,1)} MWh</div><div class="metric-sub">${fmt(totMWh*1000,0)} kWh/año</div></div>
+    <div class="metric-card blue"><div class="metric-label">USD/MWh prom. anual EPEN</div><div class="metric-value">${fUSDd(totEPEN/totMWh,1)}</div><div class="metric-sub">Sin impuestos · ponderado por consumo</div></div>
+    <div class="metric-card green"><div class="metric-label">Ahorro anual estimado</div><div class="metric-value">${fUSD(totAh)}</div><div class="metric-sub">EPEN − total CGC (precio+T&D)</div></div>
+    <div class="metric-card neutral"><div class="metric-label">Margen anual CGC</div><div class="metric-value">${fUSD(totMar)}</div><div class="metric-sub">Precio venta − costo generación</div></div>
+  `;
+}
+
+function updateFlujo(p, rows) {
+  const totMWh  = rows.reduce((a,r)=>a+r.mwh,0);
+  const totEPEN = rows.reduce((a,r)=>a+r.netoUSD,0);
+  const totCGC  = rows.reduce((a,r)=>a+r.cgcTotal,0);
+  const totAh   = totEPEN-totCGC;
+
+  document.getElementById('flujo-metrics').innerHTML = `
+    <div class="metric-card blue"><div class="metric-label">Consumo anual</div><div class="metric-value">${fmt(totMWh,1)} MWh</div><div class="metric-sub">Con estacionalidad calibrada</div></div>
+    <div class="metric-card red"><div class="metric-label">Costo anual EPEN</div><div class="metric-value">${fUSD(totEPEN)}</div><div class="metric-sub">Sin impuestos</div></div>
+    <div class="metric-card green"><div class="metric-label">Total BDFM paga a CGC</div><div class="metric-value">${fUSD(rows.reduce((a,r)=>a+r.cgcEng,0))}</div><div class="metric-sub">Solo precio CGC (CGC percibe esto)</div></div>
+    <div class="metric-card amber"><div class="metric-label">Total BDFM paga T+D</div><div class="metric-value">${fUSD(rows.reduce((a,r)=>a+r.cgcTD,0))}</div><div class="metric-sub">Transporte + distribución aparte</div></div>
+    <div class="metric-card green"><div class="metric-label">Ahorro anual BDFM</div><div class="metric-value">${fUSD(totAh)}</div><div class="metric-sub">${(totAh/totEPEN*100).toFixed(1)}% de reducción</div></div>
+  `;
+
+  // Tabla EPEN
+  const epBody = document.getElementById('epen-tbody');
+  epBody.innerHTML = '';
+  let acumE=0;
+  rows.forEach(r => {
+    acumE += r.netoUSD;
+    const esReal = r.m === 4;
+    const tr = document.createElement('tr');
+    if(esReal) tr.style.background='rgba(27,79,114,0.05)';
+    tr.innerHTML = `
+      <td>${MESES[r.m]}</td>
+      <td>${r.m>=10||r.m<=3?'<span style="color:var(--accent-2);font-weight:500">Vendimia/Verano</span>':'<span style="color:var(--accent);font-weight:500">Invierno</span>'}</td>
+      <td>${fmt(r.mwh,2)}</td>
+      <td>${fARS(r.demARS)}</td>
+      <td>${fARS(r.engARS)}</td>
+      <td>${fARS(r.netoARS)}</td>
+      <td>${fUSD(r.netoUSD)}</td>
+      <td style="font-weight:${r.unitEPEN>200?'600':'400'};color:${r.unitEPEN>200?'var(--red)':r.unitEPEN<80?'var(--accent-2)':'inherit'}">${fUSDd(r.unitEPEN,1)}</td>
+      <td><span class="badge ${esReal?'badge-real':'badge-est'}">${esReal?'REAL':'EST.'}</span></td>
+    `;
+    epBody.appendChild(tr);
+  });
+  const tf1 = document.createElement('tr'); tf1.className='total-row';
+  tf1.innerHTML=`<td>TOTAL ANUAL</td><td></td><td>${fmt(totMWh,1)}</td><td>—</td><td>—</td><td>—</td><td>${fUSD(totEPEN)}</td><td>${fUSDd(totEPEN/totMWh,1)}</td><td></td>`;
+  epBody.appendChild(tf1);
+
+  // Tabla CGC-BDFM
+  const cgcBBody = document.getElementById('cgc-bdfm-tbody');
+  cgcBBody.innerHTML = '';
+  rows.forEach(r => {
+    const esReal = r.m === 4;
+    const tr = document.createElement('tr');
+    const ahColor = r.ahorro>=0?'color:var(--green-dark)':'color:var(--red)';
+    tr.innerHTML = `
+      <td>${MESES[r.m]}</td>
+      <td>${fmt(r.mwh,2)}</td>
+      <td>${fmt(p.precioCGC,0)}</td>
+      <td>${fUSD(r.cgcEng)}</td>
+      <td>${fmt(p.td,0)}</td>
+      <td>${fUSD(r.cgcTD)}</td>
+      <td>${fUSD(r.cgcTotal)}</td>
+      <td>${fUSDd(r.cgcUnit,1)}</td>
+      <td style="${ahColor}">${fUSD(r.ahorro)}</td>
+      <td style="${ahColor}">${(r.ahorro/r.netoUSD*100).toFixed(1)}%</td>
+    `;
+    cgcBBody.appendChild(tr);
+  });
+  const tf2 = document.createElement('tr'); tf2.className='saving-row';
+  tf2.innerHTML=`<td>TOTAL ANUAL</td><td>${fmt(totMWh,1)}</td><td>${fmt(p.precioCGC,0)}</td><td>${fUSD(rows.reduce((a,r)=>a+r.cgcEng,0))}</td><td>${fmt(p.td,0)}</td><td>${fUSD(rows.reduce((a,r)=>a+r.cgcTD,0))}</td><td>${fUSD(totCGC)}</td><td>${fUSDd(totCGC/totMWh,1)}</td><td>${fUSD(totAh)}</td><td>${(totAh/totEPEN*100).toFixed(1)}%</td>`;
+  cgcBBody.appendChild(tf2);
+}
+
+function updateCGC(p, rows) {
+  const totMWh   = rows.reduce((a,r)=>a+r.mwh,0);
+  const totIng   = rows.reduce((a,r)=>a+r.cgcEng,0);
+  const totCosto = rows.reduce((a,r)=>a+r.costoCGCTotal,0);
+  const totMar   = rows.reduce((a,r)=>a+r.margen,0);
+  const margenPct= totMar/totIng*100;
+
+  document.getElementById('cgc-metrics').innerHTML = `
+    <div class="metric-card blue"><div class="metric-label">MWh vendidos anual</div><div class="metric-value">${fmt(totMWh,1)}</div><div class="metric-sub">Con estacionalidad BDFM</div></div>
+    <div class="metric-card green"><div class="metric-label">Ingreso bruto anual</div><div class="metric-value">${fUSD(totIng)}</div><div class="metric-sub">Precio venta × MWh</div></div>
+    <div class="metric-card red"><div class="metric-label">Costo generación anual</div><div class="metric-value">${fUSD(totCosto)}</div><div class="metric-sub">${p.costoCGC} USD/MWh × ${fmt(totMWh,1)} MWh</div></div>
+    <div class="metric-card green"><div class="metric-label">Margen bruto anual</div><div class="metric-value">${fUSD(totMar)}</div><div class="metric-sub">${(p.precioCGC-p.costoCGC).toFixed(0)} USD/MWh · ${margenPct.toFixed(1)}% del ingreso</div></div>
+    <div class="metric-card amber"><div class="metric-label">Margen USD/MWh</div><div class="metric-value">${fmt(p.precioCGC-p.costoCGC,1)}</div><div class="metric-sub">Precio ${p.precioCGC} − costo ${p.costoCGC} USD/MWh</div></div>
+  `;
+
+  const tbody = document.getElementById('cgc-tbody');
+  tbody.innerHTML = '';
+  let acumMar = 0;
+  rows.forEach(r => {
+    acumMar += r.margen;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${MESES[r.m]}</td>
+      <td>${fmt(r.mwh,2)}</td>
+      <td>${fmt(p.precioCGC,0)}</td>
+      <td>${fUSD(r.cgcEng)}</td>
+      <td>${fmt(p.costoCGC,0)}</td>
+      <td>${fUSD(r.costoCGCTotal)}</td>
+      <td style="color:var(--green-dark);font-weight:500">${fUSD(r.margen)}</td>
+      <td>${fmt(p.precioCGC-p.costoCGC,1)}</td>
+      <td>${((p.precioCGC-p.costoCGC)/p.precioCGC*100).toFixed(1)}%</td>
+      <td style="color:var(--green-dark)">${fUSD(acumMar)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  const tf = document.createElement('tr'); tf.className='cgc-row';
+  tf.innerHTML=`<td>TOTAL ANUAL</td><td>${fmt(totMWh,1)}</td><td>${fmt(p.precioCGC,0)}</td><td>${fUSD(totIng)}</td><td>${fmt(p.costoCGC,0)}</td><td>${fUSD(totCosto)}</td><td>${fUSD(totMar)}</td><td>${fmt(p.precioCGC-p.costoCGC,1)}</td><td>${margenPct.toFixed(1)}%</td><td>${fUSD(totMar)}</td>`;
+  tbody.appendChild(tf);
+}
+
+function destroyChart(id){if(charts[id]){charts[id].destroy();charts[id]=null;}}
+
+function updateCharts(p, rows) {
+  const mwhT3 = Array.from({length:12},(_,m)=>parseFloat((MAYO_T3_MWH*IDX_T3[m]).toFixed(2)));
+  const mwhT4 = Array.from({length:12},(_,m)=>parseFloat((MAYO_T4_MWH*IDX_T4[m]).toFixed(2)));
+  const unitEPEN = rows.map(r=>parseFloat(r.unitEPEN.toFixed(1)));
+  const cgcUnit  = p.precioCGC + p.td;
+
+  // Estacionalidad
+  destroyChart('estac');
+  charts.estac = new Chart(document.getElementById('c-estac'),{
+    type:'bar',data:{labels:MESES_S,datasets:[
+      {label:'T3 Riego',data:mwhT3,backgroundColor:'rgba(27,79,114,0.75)',stack:'a',borderRadius:2},
+      {label:'T4A Bodega',data:mwhT4,backgroundColor:'rgba(14,102,85,0.75)',stack:'a',borderRadius:2},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y.toFixed(2)} MWh`}}},
+      scales:{y:{stacked:true,ticks:{callback:v=>v+' MWh',font:{family:'DM Mono',size:11}},grid:{color:'rgba(0,0,0,.04)'}},
+              x:{stacked:true,ticks:{font:{family:'DM Sans',size:11},autoSkip:false}}}}
+  });
+
+  // USD/MWh EPEN vs CGC
+  destroyChart('unit');
+  charts.unit = new Chart(document.getElementById('c-unit'),{
+    type:'bar',data:{labels:MESES_S,datasets:[
+      {label:'EPEN USD/MWh',data:unitEPEN,backgroundColor:unitEPEN.map(v=>v>cgcUnit?'rgba(146,43,33,0.75)':'rgba(14,102,85,0.75)'),borderRadius:4},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`EPEN: ${c.parsed.y.toFixed(1)} USD/MWh · CGC all-in: ${cgcUnit} USD/MWh`}}},
+      scales:{y:{ticks:{callback:v=>v+' USD',font:{family:'DM Mono',size:11}},grid:{color:'rgba(0,0,0,.04)'}},
+              x:{ticks:{font:{family:'DM Sans',size:11},autoSkip:false}}}}
+  });
+
+  // Acumulado
+  const acumE=[],acumCGCtot=[],acumCGCing=[];
+  let se=0,sc=0,si=0;
+  rows.forEach(r=>{se+=r.netoUSD;sc+=r.cgcTotal;si+=r.cgcEng;acumE.push(Math.round(se));acumCGCtot.push(Math.round(sc));acumCGCing.push(Math.round(si));});
+  destroyChart('acum');
+  charts.acum = new Chart(document.getElementById('c-acum'),{
+    type:'line',data:{labels:MESES_S,datasets:[
+      {label:'EPEN',data:acumE,borderColor:'#922B21',backgroundColor:'rgba(146,43,33,0.06)',fill:true,tension:0.3,pointRadius:3,borderWidth:2},
+      {label:'CGC total BDFM',data:acumCGCtot,borderColor:'#0E6655',backgroundColor:'rgba(14,102,85,0.06)',fill:true,tension:0.3,pointRadius:3,borderWidth:2},
+      {label:'CGC ingreso',data:acumCGCing,borderColor:'#1B4F72',backgroundColor:'rgba(27,79,114,0.06)',fill:true,tension:0.3,pointRadius:3,borderWidth:2,borderDash:[5,3]},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fUSD(c.parsed.y)}`}}},
+      scales:{y:{ticks:{callback:v=>'USD '+Math.round(v/1000)+'k',font:{family:'DM Mono',size:11}},grid:{color:'rgba(0,0,0,.04)'}},
+              x:{ticks:{font:{family:'DM Mono',size:10}}}}}
+  });
+
+  // Ahorro mensual
+  destroyChart('ahorro');
+  charts.ahorro = new Chart(document.getElementById('c-ahorro'),{
+    type:'bar',data:{labels:MESES_S,datasets:[{
+      data:rows.map(r=>Math.round(r.ahorro)),
+      backgroundColor:rows.map(r=>r.ahorro>=0?'rgba(14,102,85,0.75)':'rgba(146,43,33,0.75)'),borderRadius:4
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.y>=0?'Ahorro':'Mayor costo'}: ${fUSD(Math.abs(c.parsed.y))}`}}},
+      scales:{y:{ticks:{callback:v=>'USD '+Math.round(v/1000)+'k',font:{family:'DM Mono',size:11}},grid:{color:'rgba(0,0,0,.04)'}},
+              x:{ticks:{font:{family:'DM Sans',size:11},autoSkip:false}}}}
+  });
+
+  // Margen CGC mensual
+  destroyChart('margen');
+  charts.margen = new Chart(document.getElementById('c-margen'),{
+    type:'bar',data:{labels:MESES_S,datasets:[{
+      data:rows.map(r=>Math.round(r.margen)),
+      backgroundColor:'rgba(27,79,114,0.75)',borderRadius:4
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`Margen CGC: ${fUSD(c.parsed.y)}`}}},
+      scales:{y:{ticks:{callback:v=>'USD '+Math.round(v/1000)+'k',font:{family:'DM Mono',size:11}},grid:{color:'rgba(0,0,0,.04)'}},
+              x:{ticks:{font:{family:'DM Sans',size:11},autoSkip:false}}}}
+  });
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  const notes={all:'Consolidado de ambos suministros',t3:'Cto. 74177 — T3 Riego (216 kW contratados)',t4:'Cto. 78919 — T4A Bodega principal (374 kW contratados)'};
+  document.getElementById('filter-note').textContent = notes[f];
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.btn-'+f).classList.add('active');
+  update();
+}
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+  document.querySelector(`.nav-item[onclick="showSection('${id}')"]`).classList.add('active');
+  setTimeout(()=>update(),50);
+}
+
+document.addEventListener('DOMContentLoaded', ()=>update());
+</script>
+</body>
+</html>
