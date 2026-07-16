@@ -304,8 +304,8 @@ footer{border-top:1px solid var(--border);background:var(--petrol);padding:16px 
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th>Mes</th><th>MWh</th><th>Potencia contratada EPEN</th><th>Energía EPEN</th>
-        <th>Subsidio 304 USD</th><th>Imp. locales USD</th><th>Total EPEN USD</th><th>USD/MWh</th><th>Fuente</th>
+        <th>Mes</th><th>MWh</th><th>kW medio</th><th>Potencia contratada EPEN</th><th>Energía EPEN</th>
+        <th>Subsidio 304 USD</th><th>Imp. locales USD</th><th>Total USD</th><th>USD/MWh</th><th>Fuente</th>
       </tr></thead>
       <tbody id="epen-tbody"></tbody>
     </table>
@@ -314,9 +314,9 @@ footer{border-top:1px solid var(--border);background:var(--petrol);padding:16px 
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th>Mes</th><th>MWh</th><th>Energía CGC</th><th>Peaje potencia EPEN</th>
+        <th>Mes</th><th>MWh</th><th>kW medio</th><th>Energía CGC</th><th>Peaje potencia EPEN</th>
         <th>Peaje energía EPEN</th><th>Transporte CAMMESA</th><th>Imp. locales USD</th>
-        <th>Total BDFM USD</th><th>USD/MWh</th><th>Ahorro USD</th><th>Ahorro %</th>
+        <th>Total USD</th><th>USD/MWh</th><th>Ahorro USD</th><th>Ahorro %</th>
       </tr></thead>
       <tbody id="cgc-bdfm-tbody"></tbody>
     </table>
@@ -504,22 +504,22 @@ function doFlujo(p,rows){
   rows.forEach(r=>{
     const tr=document.createElement('tr');
     const esRef=r.m===4||r.m===2;
-    tr.innerHTML=`<td>${MESES[r.m]}</td><td>${fmt(r.mwh,2)}</td><td>${fU(r.e.dem_usd)}</td><td>${fU(r.e.eng_usd)}</td><td style="color:var(--green)">${fU(r.e.sub_usd)}</td><td>${fU(r.e.imp_usd)}</td><td style="font-weight:600">${fU(r.e.total_usd)}</td><td style="font-weight:600;color:${r.e.total_usd/r.mwh>150?'var(--red)':'var(--text-primary)'}">${fUd(r.e.total_usd/r.mwh,1)}</td><td><span class="badge ${esRef?'badge-real':'badge-est'}">${esRef?'REAL':'EST'}</span></td>`;
+    tr.innerHTML=`<td>${MESES[r.m]}</td><td>${fmt(r.mwh,2)}</td><td>${fmt(r.mwh*1000/720,1)}</td><td>${fU(r.e.dem_usd)}</td><td>${fU(r.e.eng_usd)}</td><td style="color:var(--green)">${fU(r.e.sub_usd)}</td><td>${fU(r.e.imp_usd)}</td><td style="font-weight:600">${fU(r.e.total_usd)}</td><td style="font-weight:600;color:${r.e.total_usd/r.mwh>150?'var(--red)':'var(--text-primary)'}">${fUd(r.e.total_usd/r.mwh,1)}</td><td><span class="badge ${esRef?'badge-real':'badge-est'}">${esRef?'REAL':'EST'}</span></td>`;
     eb.appendChild(tr);
   });
   const tf1=document.createElement('tr');tf1.className='total-row';
-  tf1.innerHTML=`<td>TOTAL ANUAL</td><td>${fmt(tM,1)}</td><td>${fU(rows.reduce((a,r)=>a+r.e.dem_usd,0))}</td><td>${fU(rows.reduce((a,r)=>a+r.e.eng_usd,0))}</td><td style="color:var(--green)">${fU(rows.reduce((a,r)=>a+r.e.sub_usd,0))}</td><td>${fU(rows.reduce((a,r)=>a+r.e.imp_usd,0))}</td><td>${fU(tE)}</td><td>${fUd(tE/tM,1)}</td><td></td>`;
+  tf1.innerHTML=`<td>TOTAL ANUAL</td><td>${fmt(tM,1)}</td><td>—</td><td>${fU(rows.reduce((a,r)=>a+r.e.dem_usd,0))}</td><td>${fU(rows.reduce((a,r)=>a+r.e.eng_usd,0))}</td><td style="color:var(--green)">${fU(rows.reduce((a,r)=>a+r.e.sub_usd,0))}</td><td>${fU(rows.reduce((a,r)=>a+r.e.imp_usd,0))}</td><td>${fU(tE)}</td><td>${fUd(tE/tM,1)}</td><td></td>`;
   eb.appendChild(tf1);
 
   const cb=document.getElementById('cgc-bdfm-tbody');cb.innerHTML='';
   rows.forEach(r=>{
     const tr=document.createElement('tr');
     const ac=r.ah>=0?'color:var(--green)':'color:var(--red)';
-    tr.innerHTML=`<td>${MESES[r.m]}</td><td>${fmt(r.mwh,2)}</td><td>${fU(r.c.eng)}</td><td>${fU(r.c.pd)}</td><td>${fU(r.c.pv)}</td><td>${fU(r.c.tr)}</td><td>${fU(r.c.imp)}</td><td style="font-weight:600">${fU(r.c.total)}</td><td>${fUd(r.c.usd_mwh,1)}</td><td style="${ac};font-weight:600">${fU(r.ah)}</td><td style="${ac}">${(r.ah/r.e.total_usd*100).toFixed(1)}%</td>`;
+    tr.innerHTML=`<td>${MESES[r.m]}</td><td>${fmt(r.mwh,2)}</td><td>${fmt(r.mwh*1000/720,1)}</td><td>${fU(r.c.eng)}</td><td>${fU(r.c.pd)}</td><td>${fU(r.c.pv)}</td><td>${fU(r.c.tr)}</td><td>${fU(r.c.imp)}</td><td style="font-weight:600">${fU(r.c.total)}</td><td>${fUd(r.c.usd_mwh,1)}</td><td style="${ac};font-weight:600">${fU(r.ah)}</td><td style="${ac}">${(r.ah/r.e.total_usd*100).toFixed(1)}%</td>`;
     cb.appendChild(tr);
   });
   const tf2=document.createElement('tr');tf2.className='saving-row';
-  tf2.innerHTML=`<td>TOTAL ANUAL</td><td>${fmt(tM,1)}</td><td>${fU(tEng)}</td><td>${fU(rows.reduce((a,r)=>a+r.c.pd,0))}</td><td>${fU(rows.reduce((a,r)=>a+r.c.pv,0))}</td><td>${fU(rows.reduce((a,r)=>a+r.c.tr,0))}</td><td>${fU(rows.reduce((a,r)=>a+r.c.imp,0))}</td><td>${fU(tC)}</td><td>${fUd(tC/tM,1)}</td><td style="color:var(--green);font-weight:600">${fU(tA)}</td><td style="color:var(--green)">${(tA/tE*100).toFixed(1)}%</td>`;
+  tf2.innerHTML=`<td>TOTAL ANUAL</td><td>${fmt(tM,1)}</td><td>—</td><td>${fU(tEng)}</td><td>${fU(rows.reduce((a,r)=>a+r.c.pd,0))}</td><td>${fU(rows.reduce((a,r)=>a+r.c.pv,0))}</td><td>${fU(rows.reduce((a,r)=>a+r.c.tr,0))}</td><td>${fU(rows.reduce((a,r)=>a+r.c.imp,0))}</td><td>${fU(tC)}</td><td>${fUd(tC/tM,1)}</td><td style="color:var(--green);font-weight:600">${fU(tA)}</td><td style="color:var(--green)">${(tA/tE*100).toFixed(1)}%</td>`;
   cb.appendChild(tf2);
 }
 
