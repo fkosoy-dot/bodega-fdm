@@ -321,7 +321,7 @@ footer{border-top:1px solid var(--border);background:var(--petrol);padding:16px 
       <tbody id="cgc-bdfm-tbody"></tbody>
     </table>
   </div>
-  <div class="note"><strong>Peaje y transporte dolarizados:</strong> convertidos a USD al TC ref. $1.380 (consultora mar 2026), varían con slicer TC. El cargo de demanda EPEN es fijo mensual — no varía con el consumo. El subsidio 304/26 solo aplica en escenario EPEN.</div>
+  <div class="note"><strong>Peaje y transporte dolarizados:</strong> convertidos a USD al TC ref. $1.380 (consultora mar 2026), varían con slicer TC. El cargo de demanda EPEN es fijo mensual — no varía con el consumo. <strong>El subsidio Decreto 304/26 no aplica en el escenario CGC</strong> porque BDFM deja de ser cliente de distribución plena de EPEN — el subsidio es un descuento que EPEN aplica sobre su propia tarifa y desaparece al salir del esquema de distribución.</div>
 </div>
 
 <!-- ======= 03 FLUJO CGC ======= -->
@@ -355,13 +355,12 @@ footer{border-top:1px solid var(--border);background:var(--petrol);padding:16px 
       </div>
     </div>
     <div class="chart-card">
-      <div class="chart-title">Composición del costo mensual (USD)</div>
-      <div class="chart-subtitle">Energía EPEN vs. Energía CGC + Peaje+Transporte</div>
+      <div class="chart-title">Costo mensual total — EPEN vs. CGC (USD)</div>
+      <div class="chart-subtitle">Total factura EPEN vs. Total que pagaría BDFM con CGC</div>
       <div style="height:240px"><canvas id="c-comp"></canvas></div>
       <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#7F1D1D"></div>ENERGÍA EPEN</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#0A2540"></div>ENERGÍA CGC</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#92400E"></div>PEAJE+TRANSPORTE</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#7F1D1D"></div>TOTAL EPEN</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#0A2540"></div>TOTAL CGC</div>
       </div>
     </div>
     <div class="chart-card full">
@@ -376,8 +375,12 @@ footer{border-top:1px solid var(--border);background:var(--petrol);padding:16px 
     </div>
     <div class="chart-card">
       <div class="chart-title">USD/MWh efectivo — EPEN vs. CGC all-in</div>
-      <div class="chart-subtitle">Rojo = EPEN más caro · Azul petróleo = CGC all-in</div>
+      <div class="chart-subtitle">Costo unitario efectivo mensual con impuestos</div>
       <div style="height:220px"><canvas id="c-unit"></canvas></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#7F1D1D"></div>EPEN USD/MWh</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#0A2540;opacity:0.35"></div>CGC all-in USD/MWh</div>
+      </div>
     </div>
     <div class="chart-card">
       <div class="chart-title">Margen bruto CGC mensual (USD)</div>
@@ -393,9 +396,9 @@ footer{border-top:1px solid var(--border);background:var(--petrol);padding:16px 
   <div class="via-grid">
     <div class="via-card"><div class="via-badge red">Obstáculo crítico</div><div class="via-title">Distancia física</div><div class="via-body">Activos CGC en cuenca del Golfo San Jorge. BDFM en El Chañar, Neuquén. La energía requiere red de transporte de terceros (TRANSPA/CAMMESA) — ya incorporado en el modelo como costo inevitable.</div></div>
     <div class="via-card"><div class="via-badge red">Obstáculo crítico</div><div class="via-title">Ley 24.065 — acceso al MEM</div><div class="via-body">BDFM necesita calificar como GUME (≥300 kW sostenidos) para comprar en el MEM. En pico consume ~313 kW pero no de forma continua. Requiere medición de 12 meses para acreditar la calificación.</div></div>
-    <div class="via-card"><div class="via-badge red">Obstáculo crítico</div><div class="via-title">Habilitación CGC como generador MEM</div><div class="via-body">CGC opera como autogenerador. Para venderle a BDFM necesita habilitarse como agente generador del MEM ante ENRE/CAMMESA. Proceso de 12–24 meses con requisitos de garantía.</div></div>
+    <div class="via-card"><div class="via-badge green">Resuelto</div><div class="via-title">CGC habilitado como agente generador MEM</div><div class="via-body">CGC ya opera como agente generador del MEM. Puede vender energía directamente a usuarios habilitados sin necesidad de tramitar una nueva habilitación. Este obstáculo está superado.</div></div>
     <div class="via-card"><div class="via-badge amber">Condicionado</div><div class="via-title">PPA vía MEM</div><div class="via-body">Si BDFM acredita GUME y CGC se habilita como generador, el modelo refleja exactamente este esquema: CGC inyecta desde GSJ, BDFM retira desde nodo Neuquén pagando peaje EPEN + transporte CAMMESA.</div></div>
-    <div class="via-card"><div class="via-badge green">Viable corto plazo</div><div class="via-title">Generación distribuida in situ</div><div class="via-body">CGC instala motogeneradores a gas en El Chañar bajo Ley 27.424. Elimina el problema de transporte y la habilitación MEM. El peaje EPEN se reduce aún más. Escala 300–590 kW es viable.</div></div>
+
     <div class="via-card"><div class="via-badge green">Paralelo inmediato</div><div class="via-title">Inyección al MEM desde GSJ</div><div class="via-body">CGC se habilita como generador e inyecta excedentes a CAMMESA desde Usina Meseta Espinosa al precio spot (~44–48 USD/MWh), generando ingresos mientras avanza la habilitación del PPA con BDFM.</div></div>
   </div>
   <div class="note"><strong>El modelo ya refleja la estructura real del MEM:</strong> en el escenario CGC, BDFM paga energía a CGC + peaje EPEN + transporte CAMMESA + impuestos. Eso es exactamente lo que pagaría en un PPA vía MEM. Lo que falta es la habilitación regulatoria de ambas partes.</div>
@@ -555,10 +558,9 @@ function doCharts(p,rows){
 
   dC('estac');charts.estac=new Chart(document.getElementById('c-estac'),{type:'bar',data:{labels:MESES_S,datasets:[{label:'T3',data:mT3,backgroundColor:'rgba(26,74,107,0.8)',stack:'a',borderRadius:2},{label:'T4A',data:mT4,backgroundColor:'rgba(14,116,144,0.8)',stack:'a',borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y.toFixed(2)} MWh`}}},scales:{y:{stacked:true,ticks:{callback:v=>v+' MWh',font:{family:'IBM Plex Mono',size:10}},grid:{color:'rgba(0,0,0,.04)'}},x:{stacked:true,ticks:{font:{family:'IBM Plex Mono',size:10},autoSkip:false}}}}});
 
-  const eE=rows.map(r=>Math.round(r.e.eng_usd+r.e.dem_usd+r.e.sub_usd));
-  const eC=rows.map(r=>Math.round(r.c.eng));
-  const ptd=rows.map(r=>Math.round(r.c.pd+r.c.pv+r.c.tr));
-  dC('comp');charts.comp=new Chart(document.getElementById('c-comp'),{type:'bar',data:{labels:MESES_S,datasets:[{label:'Energía EPEN',data:eE,backgroundColor:'rgba(127,29,29,0.75)',borderRadius:2},{label:'Energía CGC',data:eC,backgroundColor:'rgba(10,37,64,0.75)',borderRadius:2},{label:'Peaje+Transp',data:ptd,backgroundColor:'rgba(146,64,14,0.65)',borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fU(c.parsed.y)}`}}},scales:{y:{ticks:{callback:v=>'USD '+Math.round(v/1000)+'k',font:{family:'IBM Plex Mono',size:10}},grid:{color:'rgba(0,0,0,.04)'}},x:{ticks:{font:{family:'IBM Plex Mono',size:10},autoSkip:false}}}}});
+  const tEPEN=rows.map(r=>Math.round(r.e.total_usd));
+  const tCGC=rows.map(r=>Math.round(r.c.total));
+  dC('comp');charts.comp=new Chart(document.getElementById('c-comp'),{type:'bar',data:{labels:MESES_S,datasets:[{label:'Total EPEN',data:tEPEN,backgroundColor:'rgba(127,29,29,0.75)',borderRadius:3},{label:'Total CGC',data:tCGC,backgroundColor:'rgba(10,37,64,0.75)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fU(c.parsed.y)}`}}},scales:{y:{ticks:{callback:v=>'USD '+Math.round(v/1000)+'k',font:{family:'IBM Plex Mono',size:10}},grid:{color:'rgba(0,0,0,.04)'}},x:{ticks:{font:{family:'IBM Plex Mono',size:10},autoSkip:false}}}}});
 
   const acE=[],acC=[],acI=[];let se=0,sc=0,si=0;
   rows.forEach(r=>{se+=r.e.total_usd;sc+=r.c.total;si+=r.c.eng;acE.push(Math.round(se));acC.push(Math.round(sc));acI.push(Math.round(si));});
